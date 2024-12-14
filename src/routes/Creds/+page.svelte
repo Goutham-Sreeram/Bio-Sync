@@ -315,7 +315,7 @@
         </label>
         <input
             type="number"
-            step="0.1"
+            step="0.0001"
             id="impedance"
             name="impedance"
             min="0"
