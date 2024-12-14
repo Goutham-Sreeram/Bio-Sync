@@ -3,7 +3,7 @@
   import { auth } from "../stores/auth";
   import { goto } from '$app/navigation';
   import { initFirebase } from "$lib/client/firebase";
-  import { doc, getDoc } from "firebase/firestore";
+  import { doc, getDoc, setDoc } from "firebase/firestore";
   let isLoading = true;
   let username = '';
   const { db } = initFirebase();
@@ -14,6 +14,23 @@
       tbw: 0,
       bmr: 0
   };
+  let isDarkMode = false;
+
+  // Check for saved theme preference
+  onMount(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      isDarkMode = savedTheme === 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+  });
+
+  function toggleDarkMode() {
+    isDarkMode = !isDarkMode;
+    const theme = isDarkMode ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }
 
   // Calculation functions
   function calculateBMI(weight, height) {
@@ -67,30 +84,38 @@
               username = user.displayName || user.email?.split('@')[0] || 'User';
               
               try {
-                  const userDoc = await getDoc(doc(db, "userdata", user.email));
+                  const userDocRef = doc(db, "userdata", user.email);
+                  const userDoc = await getDoc(userDocRef);
                   if (!userDoc.exists() || !userDoc.data().cred) {
                       goto('/creds');
                   } else {
-                      const data = userDoc.data().cred;
-                      
-                      // Parse and calculate all metrics
-                      const height = parseFloat(data.height) / 100; // Convert to meters
-                      const weight = parseFloat(data.weight);
-                      const impedance = parseFloat(data.impedance);
-                      const age = parseInt(data.age);
-                      const gender = data.gender;
+                      const data = userDoc.data();
+                      if (data.metrics) {
+                          // Use stored metrics if available
+                          userData = data.metrics;
+                      } else {
+                          const cred = data.cred;
+                          const height = parseFloat(cred.height) / 100; // Convert to meters
+                          const weight = parseFloat(cred.weight);
+                          const impedance = parseFloat(cred.impedance);
+                          const age = parseInt(cred.age);
+                          const gender = cred.gender;
 
-                      const bodyFatPercentage = gender === 'M' 
-                          ? calculateBodyFatPercentageMale(weight, impedance)
-                          : calculateBodyFatPercentageFemale(weight, impedance);
+                          const bodyFatPercentage = gender === 'M' 
+                              ? calculateBodyFatPercentageMale(weight, impedance)
+                              : calculateBodyFatPercentageFemale(weight, impedance);
 
-                      userData = {
-                          bmi: calculateBMI(weight, height),
-                          bodyFatPercentage: bodyFatPercentage,
-                          ffm: calculateFFM(weight, bodyFatPercentage),
-                          tbw: calculateTBW(weight, height, impedance, gender),
-                          bmr: calculateBMR(weight, height, age, gender)
-                      };
+                          userData = {
+                              bmi: calculateBMI(weight, height),
+                              bodyFatPercentage: bodyFatPercentage,
+                              ffm: calculateFFM(weight, bodyFatPercentage),
+                              tbw: calculateTBW(weight, height, impedance, gender),
+                              bmr: calculateBMR(weight, height, age, gender)
+                          };
+
+                          // Store calculated metrics in Firebase
+                          await setDoc(userDocRef, { metrics: userData }, { merge: true });
+                      }
                   }
               } catch (error) {
                   console.error("Error checking user credentials:", error);
@@ -110,35 +135,41 @@
 {#if isLoading}
 <div class="loading-spinner"></div>
 {:else}
-<div class="min-h-screen bg-gray-50">
+<div class="min-h-screen" style="background-color: var(--bg-color); color: var(--text-color);">
   <div class="p-4 md:p-6 lg:p-8">
     <nav class="flex flex-wrap gap-4 mb-12 animate-fade-in">
-      <button class="px-8 py-3 rounded-full text-lg font-medium shadow-sm bg-[#0a0f15] text-white hover:opacity-90 transition-opacity w-full sm:w-auto">
+      <button class="px-8 py-3 rounded-full text-lg font-medium shadow-sm" style="background-color: var(--card-bg-color); color: var(--card-text-color);">
         Dashboard
       </button>
-      <button class="px-8 py-3 rounded-full text-lg font-medium shadow-sm bg-white text-gray-600 hover:bg-gray-50 transition-colors w-full sm:w-auto">
+      <button class="px-8 py-3 rounded-full text-lg font-medium shadow-sm" style="background-color: var(--card-bg-color); color: var(--card-text-color);">
         Diet Plan
       </button>
       <button 
         on:click={() => goto('/creds')}
-        class="px-8 py-3 rounded-full text-lg font-medium shadow-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors w-full sm:w-auto"
+        class="px-8 py-3 rounded-full text-lg font-medium shadow-sm" style="background-color: var(--card-bg-color); color: var(--card-text-color);"
       >
         Add New Values
       </button>
-      <span class="flex items-center ml-auto mr-4 text-gray-600 font-medium">
+      <span class="flex items-center ml-auto mr-4 font-medium" style="color: var(--text-color);">
         Welcome, {username}
       </span>
       <button 
         on:click={handleLogout}
-        class="px-8 py-3 rounded-full text-lg font-medium shadow-sm bg-red-500 text-white hover:bg-red-600 transition-colors w-full sm:w-auto"
+        class="px-8 py-3 rounded-full text-lg font-medium shadow-sm" style="background-color: var(--card-bg-color); color: var(--card-text-color);"
       >
         Logout
+      </button>
+      <button 
+        on:click={toggleDarkMode}
+        class="px-8 py-3 rounded-full text-lg font-medium shadow-sm" style="background-color: var(--card-bg-color); color: var(--card-text-color);"
+      >
+        {isDarkMode ? 'Light Mode' : 'Dark Mode'}
       </button>
     </nav>
 
     <header class="mb-12 animate-fade-in animation-delay-200">
-      <h1 class="text-4xl text-[#4867AA] font-medium mb-2">Overview</h1>
-      <h2 class="text-4xl text-[#9096A3] font-normal">Patient Health</h2>
+      <h1 class="text-4xl font-medium mb-2" style="color: var(--text-color);">Overview</h1>
+      <h2 class="text-4xl font-normal" style="color: var(--text-color);">Patient Health</h2>
     </header>
 
     <div class="md:relative h-[70vh] flex flex-col md:flex-row gap-8">
@@ -149,29 +180,29 @@
 
       <main class="grid grid-cols-1 w-full md:grid-cols-2 lg:grid-cols-2 gap-8 flex-grow max-w-[1200px]">
         <!-- BMI Card -->
-        <div class="bg-[#0a0f15] text-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-shadow animate-slide-up animation-delay-400">
+        <div class="p-8 rounded-3xl shadow-lg hover:shadow-xl transition-shadow animate-slide-up animation-delay-400" style="background-color: var(--card-bg-color); color: var(--card-text-color);">
           <p class="text-xl opacity-90 mb-8 leading-relaxed">
             Your current BMI is {userData.bmi < 18.5 ? 'below normal' : userData.bmi < 25 ? 'very good' : userData.bmi < 30 ? 'above normal' : 'high'}
           </p>
-          <div class="text-6xl font-medium {userData.bmi < 25 ? 'text-green-400' : 'text-yellow-400'}">
+          <div class="text-6xl font-medium" style="color: {userData.bmi < 25 ? 'green' : 'yellow'};">
               {userData.bmi.toFixed(1)}
           </div>
         </div>
 
         <!-- Fat Percentage Card -->
-        <div class="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-shadow animate-slide-up animation-delay-500">
-          <p class="text-xl text-gray-500 mb-4">Total Fat %</p>
-          <div class="text-6xl font-medium text-gray-900">{userData.bodyFatPercentage.toFixed(1)}%</div>
+        <div class="p-8 rounded-3xl shadow-lg hover:shadow-xl transition-shadow animate-slide-up animation-delay-500" style="background-color: var(--card-bg-color); color: var(--card-text-color);">
+          <p class="text-xl mb-4">Total Fat %</p>
+          <div class="text-6xl font-medium">{userData.bodyFatPercentage.toFixed(1)}%</div>
         </div>
 
         <!-- Stats Grid -->
         <div class="flex flex-col md:flex-row gap-4 w-full col-span-full">
           {#each stats as stat, i}
-            <div class="flex-1 bg-white p-7 rounded-3xl shadow-lg hover:shadow-xl transition-shadow animate-slide-up" 
-                 style="animation-delay: {600 + (i * 100)}ms">
-              <h3 class="text-2xl text-gray-900 font-medium mb-2">{stat.title}</h3>
-              <p class="text-gray-400 mb-3">your {stat.title} is</p>
-              <div class="text-4xl font-medium text-gray-900">{stat.value}</div>
+            <div class="flex-1 p-7 rounded-3xl shadow-lg hover:shadow-xl transition-shadow animate-slide-up" 
+                 style="animation-delay: {600 + (i * 100)}ms; background-color: var(--card-bg-color); color: var(--card-text-color);">
+              <h3 class="text-2xl font-medium mb-2">{stat.title}</h3>
+              <p class="mb-3">your {stat.title} is</p>
+              <div class="text-4xl font-medium">{stat.value}</div>
             </div>
           {/each}
         </div>

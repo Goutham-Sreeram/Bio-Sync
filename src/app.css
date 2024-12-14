@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+    --bg-color: #f9fafb;
+    --text-color: #1f2937;
+    --card-bg-color: #ffffff;
+    --card-text-color: #1f2937;
+  }
+  
+  [data-theme='dark'] {
+    --bg-color: #1f2937;
+    --text-color: #f9fafb;
+    --card-bg-color: #374151;
+    --card-text-color: #f9fafb;
+  }
+  
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+  }
