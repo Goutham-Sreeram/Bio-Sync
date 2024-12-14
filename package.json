@@ -15,6 +15,7 @@
 		"vite": "^6.0.0"
 	},
 	"dependencies": {
+		"@huggingface/inference": "^2.8.1",
 		"@splinetool/runtime": "^1.9.48",
 		"autoprefixer": "^10.4.20",
 		"dotenv": "^16.4.7",

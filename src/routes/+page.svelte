@@ -138,10 +138,17 @@
 <div class="min-h-screen" style="background-color: var(--bg-color); color: var(--text-color);">
   <div class="p-4 md:p-6 lg:p-8">
     <nav class="flex flex-wrap gap-4 mb-12 animate-fade-in">
-      <button class="px-8 py-3 rounded-full text-lg font-medium shadow-sm" style="background-color: var(--card-bg-color); color: var(--card-text-color);">
+      <button 
+        class="px-8 py-3 rounded-full text-lg font-medium shadow-sm highlight" 
+        style="background-color: var(--highlight-bg-color); color: var(--highlight-text-color); border: 2px solid var(--highlight-border-color);"
+      >
         Dashboard
       </button>
-      <button class="px-8 py-3 rounded-full text-lg font-medium shadow-sm" style="background-color: var(--card-bg-color); color: var(--card-text-color);">
+      <button 
+        on:click={() => goto('/dietplan')}
+        class="px-8 py-3 rounded-full text-lg font-medium shadow-sm" 
+        style="background-color: var(--card-bg-color); color: var(--card-text-color);"
+      >
         Diet Plan
       </button>
       <button 
@@ -180,7 +187,7 @@
 
       <main class="grid grid-cols-1 w-full md:grid-cols-2 lg:grid-cols-2 gap-8 flex-grow max-w-[1200px]">
         <!-- BMI Card -->
-        <div class="p-8 rounded-3xl shadow-lg hover:shadow-xl transition-shadow animate-slide-up animation-delay-400" style="background-color: var(--card-bg-color); color: var(--card-text-color);">
+        <div class="p-8 rounded-3xl shadow-lg hover:shadow-xl transition-shadow animate-slide-up animation-delay-400" style="background-color: var(--bmi-bg-color); color: var(--bmi-text-color);">
           <p class="text-xl opacity-90 mb-8 leading-relaxed">
             Your current BMI is {userData.bmi < 18.5 ? 'below normal' : userData.bmi < 25 ? 'very good' : userData.bmi < 30 ? 'above normal' : 'high'}
           </p>
@@ -270,5 +277,21 @@
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-20px); }
+}
+
+/* Highlight style for the active button */
+.highlight {
+  border: 2px solid var(--highlight-border-color);
+  background-color: var(--highlight-bg-color);
+  color: var(--highlight-text-color);
+}
+
+/* Theme-specific styles */
+:root {
+  --highlight-border-color: black; /* Default for light mode */
+}
+
+[data-theme='dark'] {
+  --highlight-border-color: white;
 }
 </style>
