@@ -22,10 +22,14 @@
     if (savedTheme) {
       isDarkMode = savedTheme === 'dark';
       document.documentElement.setAttribute('data-theme', savedTheme);
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      isDarkMode = prefersDark;
+      document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
     }
   });
 
-  function toggleDarkMode() {
+  function toggleTheme() {
     isDarkMode = !isDarkMode;
     const theme = isDarkMode ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', theme);
@@ -119,7 +123,7 @@
                   }
               } catch (error) {
                   console.error("Error checking user credentials:", error);
-                  goto('/cred');
+                  goto('/creds');
               }
           }
       });
@@ -139,38 +143,45 @@
   <div class="p-4 md:p-6 lg:p-8">
     <nav class="flex flex-wrap gap-4 mb-12 animate-fade-in">
       <button 
-        class="px-8 py-3 rounded-full text-lg font-medium shadow-sm highlight" 
-        style="background-color: var(--highlight-bg-color); color: var(--highlight-text-color); border: 2px solid var(--highlight-border-color);"
+        class="absolute top-4 right-4 z-50 p-3 rounded-full shadow-lg"
+        style="background-color: var(--button-bg-color); color: var(--button-text-color);"
+        on:click={toggleTheme}
+        in:fade={{ duration: 800, delay: 1000 }}
       >
-        Dashboard
+        {#if isDarkMode}
+          <img src="/icons/moon.svg" alt="Dark mode" class="w-6 h-6" />
+        {:else}
+          <img src="/icons/sun.svg" alt="Light mode" class="w-6 h-6" />
+        {/if}
+      </button>
+
+      <button 
+        on:click={() => goto('/')}
+        class="p-3 rounded-full shadow-lg"
+        style="background-color: var(--button-bg-color); color: var(--button-text-color);"
+      >
+        <img src="/icons/dash.svg" alt="Dashboard" class="w-6 h-6" />
       </button>
       <button 
         on:click={() => goto('/dietplan')}
-        class="px-8 py-3 rounded-full text-lg font-medium shadow-sm" 
-        style="background-color: var(--card-bg-color); color: var(--card-text-color);"
+        class="p-3 rounded-full shadow-lg"
+        style="background-color: var(--button-bg-color); color: var(--button-text-color);"
       >
-        Diet Plan
+        <img src="/icons/diet.svg" alt="Diet Plan" class="w-6 h-6" />
       </button>
       <button 
         on:click={() => goto('/creds')}
-        class="px-8 py-3 rounded-full text-lg font-medium shadow-sm" style="background-color: var(--card-bg-color); color: var(--card-text-color);"
+        class="p-3 rounded-full shadow-lg"
+        style="background-color: var(--button-bg-color); color: var(--button-text-color);"
       >
-        Add New Values
+        <img src="/icons/add.svg" alt="Add New Values" class="w-6 h-6" />
       </button>
-      <span class="flex items-center ml-auto mr-4 font-medium" style="color: var(--text-color);">
-        Welcome, {username}
-      </span>
       <button 
         on:click={handleLogout}
-        class="px-8 py-3 rounded-full text-lg font-medium shadow-sm" style="background-color: var(--card-bg-color); color: var(--card-text-color);"
+        class="p-3 rounded-full shadow-lg"
+        style="background-color: var(--logout-bg-color); color: var(--logout-text-color);"
       >
-        Logout
-      </button>
-      <button 
-        on:click={toggleDarkMode}
-        class="px-8 py-3 rounded-full text-lg font-medium shadow-sm" style="background-color: var(--card-bg-color); color: var(--card-text-color);"
-      >
-        {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+        <img src="/icons/close.svg" alt="Logout" class="w-6 h-6" />
       </button>
     </nav>
 
@@ -293,5 +304,27 @@
 
 [data-theme='dark'] {
   --highlight-border-color: white;
+}
+
+:root {
+  --button-bg-color: #f3f3f3;
+  --button-text-color: #333;
+  --logout-bg-color: #ff4d4d;
+  --logout-text-color: #fff;
+}
+
+[data-theme='dark'] {
+  --button-bg-color: #333;
+  --button-text-color: #f3f3f3;
+  --logout-bg-color: #ff4d4d;
+  --logout-text-color: #fff;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  nav button {
+    width: 56px;
+    height: 56px;
+  }
 }
 </style>

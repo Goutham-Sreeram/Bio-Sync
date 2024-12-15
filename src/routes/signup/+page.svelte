@@ -91,7 +91,7 @@
             }
 
             // Redirect to home page after successful signup
-            goto('/Creds');
+            goto('/creds');
         } catch (error: any) {
             errorMessage = error.message;
         }
@@ -114,7 +114,7 @@
                 });
             }
 
-            goto("/Creds");
+            goto("/creds");
         } catch (error: any) {
             errorMessage = error.message;
         }

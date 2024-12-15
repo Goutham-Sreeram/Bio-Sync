@@ -53,7 +53,7 @@
       // Auth state subscription
       return auth.subscribe((user) => {
         if (user) {
-          goto('/Creds');
+          goto('/');
         }
       });
     });
