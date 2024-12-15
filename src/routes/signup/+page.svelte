@@ -91,7 +91,7 @@
             }
 
             // Redirect to home page after successful signup
-            goto('/');
+            goto('/Creds');
         } catch (error: any) {
             errorMessage = error.message;
         }
